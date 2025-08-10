@@ -1,0 +1,36 @@
+# Rust build artifacts
+/target/
+Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Configuration files that might contain sensitive data
+*.json
+!example-*.json
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# SSH keys (in case someone accidentally tries to commit them)
+*.pem
+*.key
+id_rsa*
+*.ppk
