@@ -48,7 +48,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let config = FileConfig::from_file(Path::new(cli_args.config.as_str()))
-        .expect("Failed to read configuration file");
+        .unwrap_or_else(|e| {
+            eprintln!("Failed to read configuration file '{}': {}", cli_args.config, e);
+            eprintln!("Hint: Create a config file with: cargo shipit --init shipit.json");
+            std::process::exit(1);
+        });
 
     let config = Config::from_cli(cli_args, config);
 
@@ -135,7 +139,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         scp_upload(&session, source, &destination).expect("Failed to perform SCP upload");
     }
     Ok(())
-    //scp_upload(&session, local_path, remote_path).expect("Failed to perform SCP upload");
 }
 
 fn scp_upload(
@@ -154,8 +157,8 @@ fn scp_upload(
         _ => println!("Uploading {:.4} MB", file_size as f64 / 1000000.0),
     }
 
-    // Initiate the SCP upload
-    let mut remote_file = session.scp_send(Path::new(remote_path), 0o644, file_size, None)?;
+    // Initiate the SCP upload with executable permissions
+    let mut remote_file = session.scp_send(Path::new(remote_path), 0o755, file_size, None)?;
 
     // Read the local file and write to the remote file
     let mut buffer = Vec::new();

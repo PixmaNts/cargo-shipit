@@ -1,15 +1,17 @@
 # cargo-shipit
 
-A Cargo subcommand for building and deploying Rust binaries to Linux targets via SSH. Ship it! 🚀
+A Cargo subcommand for building and deploying Rust binaries to Linux targets via SSH.
 
 ## Features
 
-- Cross-compile Rust projects for embedded Linux targets
-- Automatically upload binaries to remote embedded devices via SCP/SSH
-- Support for both debug and release builds
-- SSH key-based authentication support
-- Configurable via JSON configuration files or CLI arguments
+- Cross-compile Rust projects for Linux targets
+- Deploy binaries to remote devices via SSH/SCP
+- SSH key and password authentication
+- Automatic binary detection from Cargo.toml
+- Intelligent build detection (only builds when needed)
+- Support for debug, release, and custom build profiles
 - Interactive directory creation on remote targets
+- Relative path support in configuration files
 
 ## Installation
 
@@ -30,34 +32,37 @@ cargo install --path .
 ### Basic Usage
 
 ```bash
-# Build and upload binaries to an embedded target
-cargo shipit --host 192.168.1.100 --username root --password mypass --binaries my_app --build
+# Initialize a config file
+cargo shipit --init shipit.json
 
-# Use a configuration file
-cargo shipit --config embedded.json --binaries my_app --build
+# Edit shipit.json with your target details, then deploy
+cargo shipit
+
+# Or specify options directly
+cargo shipit --host 192.168.1.100 --username root --key ~/.ssh/id_rsa
 ```
 
 ### Command Line Options
 
 ```
-Cargo subcommand for building and deploying Rust binaries to embedded Linux targets via SCP
+Cargo subcommand for building and deploying Rust binaries to Linux targets via SSH. Ship it!
 
 Usage: cargo-shipit [OPTIONS]
 
 Options:
-  -c, --config <CONFIG>                The path to the configuration file [default: scp.json]
-  -b, --binaries <BINARIES>            The binary files to upload to the embedded target
+  -c, --config <CONFIG>                The path to the configuration file [default: shipit.json]
+  -b, --binaries <BINARIES>            The binary files to upload to the Linux target (auto-detected from Cargo.toml if not specified)
   -d, --debug                          Enable debug mode
-  -r, --remote-folder <REMOTE_FOLDER>  The remote directory path on the embedded target
-  -H, --host <HOST>                    Hostname or IP address of the embedded Linux target
-  -U, --username <USERNAME>            SSH username for the embedded target
-  -P, --password <PASSWORD>            SSH password for the embedded target
+  -r, --remote-folder <REMOTE_FOLDER>  The remote directory path on the Linux target
+  -H, --host <HOST>                    Hostname or IP address of the Linux target
+  -U, --username <USERNAME>            SSH username for the Linux target
+  -P, --password <PASSWORD>            SSH password for the Linux target
   -k, --key <KEY>                      Path to SSH private key file for authentication
-  -p, --port <PORT>                    SSH port of the embedded target [default: 22]
+  -p, --port <PORT>                    SSH port of the Linux target [default: 22]
   -t, --target <TARGET>                Rust target triple for cross-compilation (e.g., 'armv7-unknown-linux-gnueabihf', 'aarch64-unknown-linux-gnu')
   -T, --target-folder <TARGET_FOLDER>  Local cargo target directory path
   -i, --init <INIT>                    Initialize a new configuration file at the specified path
-  -B, --build                          Build the project before uploading
+  -B, --build                          Build the project before uploading (auto-detected if not specified)
       --profile <PROFILE>              Build profile to use (debug, release, or custom profile name) [default: release]
   -h, --help                           Print help
   -V, --version                        Print version
@@ -75,32 +80,23 @@ This creates a template configuration file:
 
 ```json
 {
-  "host": "embedded-linux-target",
+  "host": "pi5.lan",
   "port": 22,
-  "username": "root", 
-  "password": "password",
-  "key": null,
-  "target_folder": "/path/to/your/project/target/",
-  "target": "armv7-unknown-linux-gnueabihf",
-  "remote_folder": "/tmp/binaries/",
+  "username": "pi", 
+  "password": null,
+  "key": "~/.ssh/id_rsa",
+  "target_folder": "./target/",
+  "target": "aarch64-unknown-linux-gnu",
+  "remote_folder": "/home/pi/apps/",
   "profile": "release"
 }
 ```
 
-Edit the configuration file with your embedded target's details:
-
-```json
-{
-  "host": "192.168.1.100",
-  "port": 22,
-  "username": "root",
-  "password": "mypassword", 
-  "target_folder": "/home/user/my_project/target/",
-  "target": "armv7-unknown-linux-gnueabihf",
-  "remote_folder": "/opt/my_apps/",
-  "profile": "release"
-}
-```
+Configuration supports:
+- Relative paths (relative to config file location)
+- Tilde expansion for SSH keys
+- Automatic binary detection
+- Automatic build detection
 
 Then use it:
 
@@ -198,48 +194,18 @@ Or save it in your configuration:
 
 ## Examples
 
-### Example 1: Deploy to Raspberry Pi
+### Example 1: Raspberry Pi Deployment
 
 ```bash
-cargo shipit \
-  --host raspberrypi.local \
-  --username pi \
-  --password raspberry \
-  --target armv7-unknown-linux-gnueabihf \
-  --remote-folder /home/pi/apps \
-  --binaries my_embedded_app \
-  --build
+cargo shipit --init shipit.json
+# Edit shipit.json with your Pi's details
+cargo shipit
 ```
 
-### Example 2: Deploy to Custom Embedded Board
+### Example 2: Direct Command Line
 
 ```bash
-cargo shipit \
-  --host 192.168.10.50 \
-  --username root \
-  --password mypass123 \
-  --target armv7-unknown-linux-gnueabihf \
-  --remote-folder /opt/applications \
-  --binaries sensor_daemon control_app \
-  --build
-```
-
-### Example 3: Using Configuration File
-
-Create `production.json`:
-```json
-{
-  "host": "10.0.1.100",
-  "username": "deploy",
-  "password": "secure_password",
-  "target": "aarch64-unknown-linux-gnu",
-  "remote_folder": "/usr/local/bin/"
-}
-```
-
-Deploy:
-```bash
-cargo shipit --config production.json --binaries my_service --build
+cargo shipit --host 192.168.1.100 --username pi --key ~/.ssh/id_rsa
 ```
 
 ## Security Notes

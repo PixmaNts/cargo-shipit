@@ -13,7 +13,7 @@ pub struct CliArgs {
     #[arg(
         short = 'b',
         long,
-        help = "The binary files to upload to the Linux target"
+        help = "The binary files to upload to the Linux target (auto-detected from Cargo.toml if not specified)"
     )]
     pub binaries: Vec<String>,
     #[arg(short = 'd', long, help = "Enable debug mode", default_value = "false")]
